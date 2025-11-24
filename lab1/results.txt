@@ -1,0 +1,41 @@
+1. a.
+MSE = 6.348095
+
+> coef(model)
+  (Intercept)      subject.           age           sex     test_time   total_UPDRS     Jitter... 
+ 3.288373e+00 -1.733094e-02 -3.222960e-02  1.028338e+00 -3.853130e-04  7.275318e-01  2.363456e+02 
+  Jitter.Abs.    Jitter.RAP   Jitter.PPQ5    Jitter.DDP       Shimmer   Shimmer.dB.  Shimmer.APQ3 
+-1.797077e+04  1.845200e+03 -7.460665e+01 -6.983379e+02  5.244432e+01 -9.851538e-01  5.826162e+03 
+ Shimmer.APQ5 Shimmer.APQ11   Shimmer.DDA           NHR           HNR          RPDE           DFA 
+-6.977062e+01  3.198008e+01 -1.953805e+03  1.988507e-01 -8.180091e-03 -2.454862e+00 -7.783092e-01 
+          PPE 
+ 4.905177e+00 
+
+Jitter.Abs. is the feature with the coefficient of greatest absolute magnitude -1.797077e+04. apart from that
+the Shimmer.APQ3 (5.826162e+03) also contributes to the model. the greatest magnitude is of e+04-e+03
+
+> ridge_opt(1)
+$par
+  (Intercept)      subject.           age           sex     test_time   total_UPDRS     Jitter... 
+-1.0523640632  0.0006240300 -0.0170542351  1.0275835819 -0.0006507029  0.7321597961  0.0285924471 
+  Jitter.Abs.    Jitter.RAP   Jitter.PPQ5    Jitter.DDP       Shimmer   Shimmer.dB.  Shimmer.APQ3 
+-0.0024180520 -0.0016940288  0.0077089983 -0.0056348645  0.0961121945  1.3421056658 -0.0399705119 
+ Shimmer.APQ5 Shimmer.APQ11   Shimmer.DDA           NHR           HNR          RPDE           DFA 
+-0.0255825207  0.3820206753 -0.1221403937 -0.0786405869  0.0650853817 -0.7073778646  0.1028687051 
+          PPE               
+ 1.7075964056  2.4935670465 
+
+$value
+[1] 5488.737
+
+$counts
+function gradient 
+     188       84 
+
+$convergence
+[1] 0
+
+$message
+NULL
+
+4
