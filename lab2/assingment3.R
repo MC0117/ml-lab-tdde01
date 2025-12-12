@@ -95,5 +95,128 @@ ggplot(scores_df, aes(x=PC1, y=PC2, color=crime_rate))  +
               color = "Violent Crimes per Pop") +
          theme_minimal()
 
+n=dim(communities)[1]
+set.seed(12345) 
+id=sample(1:n, floor(n*0.5)) 
+train=communities[id,] 
+test=communities[-id,] 
+
+model_scaler = preProcess(train, method = c("center", "scale"))
+train_scaled <- predict(scaler, train)
+test_scaled <- predict(scaler, test)
+
+model <- lm(train_scaled$ViolentCrimesPerPop~., train_scaled)
+preds_train <- predict(model, train_scaled)
+preds_test <- predict(model, test_scaled)
+
+MSE_train <- mean((train_scaled$ViolentCrimesPerPop - preds_train)^2)
+MSE_test <- mean((test_scaled$ViolentCrimesPerPop - preds_test)^2)
+# MSE_train 0.01406865
+# MSE_test 0.02171593
+# Slightly overfitted
 
 
+#TASK 4
+
+
+# Prepare the data matrices
+X_train <- as.matrix(train_scaled[, -which(names(train_scaled) == "ViolentCrimesPerPop")])
+X_test <- as.matrix(test_scaled[, -which(names(test_scaled) == "ViolentCrimesPerPop")])
+y_train <- train_scaled$ViolentCrimesPerPop
+y_test <- test_scaled$ViolentCrimesPerPop
+
+# Initialize storage vectors
+train_errors <- c()
+test_errors <- c()
+
+# Cost function that tracks errors at each iteration
+cost_function <- function(theta) {
+  # Training error (this is what BFGS minimizes)
+  predictions_train <- X_train %*% theta
+  mse_train <- mean((y_train - predictions_train)^2)
+  
+  # Test error
+  predictions_test <- X_test %*% theta
+  mse_test <- mean((y_test - predictions_test)^2)
+  
+  # Store both errors using global assignment
+  train_errors <<- c(train_errors, mse_train)
+  test_errors <<- c(test_errors, mse_test)
+  
+  # Return training error for optimization
+  return(mse_train)
+}
+
+# Initialize theta to zero vector
+theta_init <- rep(0, ncol(X_train))
+
+# Run BFGS optimization
+opt_result <- optim(
+  par = theta_init,
+  fn = cost_function,
+  method = "BFGS"
+)
+
+# Find optimal iteration (minimum test error - early stopping criterion)
+optimal_iteration <- which.min(test_errors)
+
+cat("Total iterations:", length(train_errors), "\n")
+cat("Optimal iteration (early stopping):", optimal_iteration, "\n")
+cat("Training error at optimal iteration:", train_errors[optimal_iteration], "\n")
+cat("Test error at optimal iteration:", test_errors[optimal_iteration], "\n")
+
+# Plot errors (discarding first 500 iterations as suggested)
+start_iter <- 500
+plot_data <- data.frame(
+  iteration = start_iter:length(train_errors),
+  train_error = train_errors[start_iter:length(train_errors)],
+  test_error = test_errors[start_iter:length(test_errors)]
+)
+
+plot(plot_data$iteration, plot_data$train_error,
+     type = "l", col = "black", lwd = 2,
+     xlab = "Iteration Number",
+     ylab = "Mean Squared Error",
+     main = "Training and Test Errors vs Iteration Number",
+     ylim = range(c(plot_data$train_error, plot_data$test_error)))
+
+lines(plot_data$iteration, plot_data$test_error, col = "blue", lwd = 2)
+
+# Add vertical line at optimal iteration
+abline(v = optimal_iteration, col = "red", lty = 2, lwd = 2)
+
+legend("topright", 
+       legend = c("Training Error", "Test Error", "Optimal (Early Stopping)"),
+       col = c("black", "blue", "red"),
+       lty = c(1, 1, 2),
+       lwd = 2)
+
+# Compare with Task 3 results
+cat("\n=== Comparison with Task 3 ===\n")
+cat("Task 3 - Training MSE:", mse_train, "\n")
+cat("Task 3 - Test MSE:", mse_test, "\n")
+cat("Task 4 (optimal) - Training MSE:", train_errors[optimal_iteration], "\n")
+cat("Task 4 (optimal) - Test MSE:", test_errors[optimal_iteration], "\n")
+
+# Alternative visualization with ggplot2
+library(ggplot2)
+
+plot_data_long <- data.frame(
+  iteration = rep(start_iter:length(train_errors), 2),
+  error = c(train_errors[start_iter:length(train_errors)],
+            test_errors[start_iter:length(test_er rors)]),
+  type = rep(c("Training", "Test"), each = length(start_iter:length(train_errors)))
+)
+
+ggplot(plot_data_long, aes(x = iteration, y = error, color = type)) +
+  geom_line(size = 1) +
+  geom_vline(xintercept = optimal_iteration, linetype = "dashed", 
+             color = "red", size = 1) +
+  labs(title = "Training and Test Errors During BFGS Optimization",
+       x = "Iteration Number",
+       y = "Mean Squared Error",
+       color = "Dataset") +
+  theme_minimal() +
+  annotate("text", x = optimal_iteration, y = max(plot_data_long$error) * 0.9,
+           label = paste("Optimal:", optimal_iteration), 
+           color = "red", hjust = -0.1)
