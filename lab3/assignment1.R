@@ -1,4 +1,4 @@
-set.seed(1234567890)
+set.seed(12345)
 library(geosphere)
 library("dplyr")
 
@@ -16,19 +16,29 @@ st$hour <- as.numeric(substr(st$time, 1, 2))
 
 #position pre-processing, calculating haversine distance
 positions <- stations%>%select(longitude, latitude)
-space_distances <- distHaversine(positions, c(b,a))
+
 
 
 h_space <- 80000
-h_date <- 10
+h_date <- 20
 h_time <- 2
 
 #a <- 67.91130 remote point
-#b <-  19.60680
-a <-58.8953 #59.8953   17.5935 high frequency point
-b <- 17.5935
+#b <-  19.60680 
+# 
+# a <- 59.8953
+# b <- 17.5935# high freq
 
-date <- as.Date("2013-12-12") #date to predict
+a <- 58.0340 # Lat
+b <- 14.9756 # Long external
+
+# a <-58.4274 #59.8953   17.5935 high frequency point
+# b <- 14.826
+
+space_distances <- distHaversine(positions, c(b,a))
+
+#date <- as.Date("2013-07-04") #date to predict
+date <- as.Date("2013-08-16")
 times <- c(
   "04:00:00",
   "06:00:00",
@@ -79,19 +89,39 @@ for(i in seq_along(times)){
   
   temp_sum[i] <- sum(w_sum * st_filtered$air_temperature) / sum(w_sum)
   temp_prod[i] <- sum(w_prod * st_filtered$air_temperature) / sum(w_prod)
-  # 
 }
 
+# Plot sum vs product kernel predictions on same figure
+plot(times, temp_prod,
+     type = "o",
+     pch = 19,
+     col = "black",
+     lwd = 2,
+     xlab = "Hour of the day",
+     ylab = "Predicted Temperature (°C)",
+     main = "Temperature forecast",
+     ylim = range(c(temp_sum, temp_prod), na.rm = TRUE),
+     xaxt = "n")  # suppress x-axis to format manually
 
-plot(times, temp_sum, type="o", col="blue", pch=16, lwd=2, cex=1.2,
-     xlab="Hour of the day", ylab="Predicted Temperature (°C)",
-     main="Comparison: Sum vs Product Kernels", xaxt="n")
-lines(times, temp_prod, type="o", col="red", pch=17, lwd=2, cex=1.2)
-axis(1, at=times, labels=paste0(times, ":00"))
-grid(nx=NA, ny=NULL, col="lightgray", lty="dotted")
-legend("topright", legend=c("Sum of Kernels", "Product of Kernels"),
-       col=c("blue","red"), pch=c(16,17), lwd=2)
+# Add sum-kernel predictions
+points(times, temp_sum,
+       type = "o",
+       pch = 17,
+       col = "red",
+       lwd = 2)
 
+# Format x-axis
+axis(1, at = times, labels = paste0(times, ":00"))
+
+# Add light grid
+grid(nx = NA, ny = NULL, col = "lightgray", lty = "dotted")
+
+# Add legend
+legend("topright",
+       legend = c("Kernel product", "Kernel sum"),
+       col = c("black", "red"),
+       pch = c(19, 17),
+       lwd = 2)
 
 # oral defence: comparison of sum vs product of kernels:
 # Using the sum of kernels gives smooth temperature predictions because a measurement
