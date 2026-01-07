@@ -130,3 +130,4 @@ pred_diabetes <- predict(model_expanded, train_df, type="response")
 expanded_confusion_matrix <- table(ifelse(pred_diabetes > r, 1, 0), diabetes)
 
 MCE_cm(expanded_confusion_matrix, pred_diabetes, r) #improved slightly approx 24%
+
