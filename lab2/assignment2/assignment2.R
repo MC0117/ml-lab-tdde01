@@ -146,13 +146,13 @@ plot(FPR, TPR, pch=5, type="b")
 #logistic regression classifier
 
 log_model <- glm(y ~ ., data=data_train, family="binomial")
-probs <- predict(log_model, newdata = data_test, type="class")
+probs <- predict(log_model, newdata = data_test, type="response")
 
 TPR <- rep(0, 19)
 FPR <- rep(0, 19)
 index <- 1
 for(i in seq(from=0.05, to=0.95, by=0.05)){
-  pred <- ifelse(probs[,"yes"] > i, "yes", "no")
+  pred <- ifelse(probs> i, "yes", "no")
   cm <- table(pred, data_test$y)
   TP <- cm["yes","yes"]
   TN <- cm["no","no"]
