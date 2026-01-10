@@ -66,4 +66,6 @@ for(i in 1:10){ # We produce predictions for just the first 10 points in the dat
   k<-c(k, # Your code here)
 }
 k
+
+
 predict(filter3,spam[1:10,-58], type = "decision")

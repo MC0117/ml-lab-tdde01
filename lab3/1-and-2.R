@@ -88,4 +88,37 @@ legend("bottomright", c("train data [0,10]", "true sin [0,50]", "predictions"),
 
 nn_orig$weights
 
+# See what happens to one neuron
+Var_values <- c(0, 5, 10, 20, 50)
+for(v in Var_values) {
+  activation <- 1 / (1 + exp(-(11.96 - 1.80 * v)))
+  cat("Var =", v, "→ activation =", round(activation, 6), "\n")
+}
+
+# TASK 5 predict x from sin(x) (inverse problem)
+set.seed(1234567890)
+Var <- runif(500, 0, 10)
+mydata <- data.frame(Sin=sin(Var), Var=Var)  # Sin is input, Var is output!
+
+# Train on ALL 500 points
+winit <- runif(10, -1, 1)
+
+# Train the network - may need threshold to avoid convergence issues
+nn_inverse <- neuralnet(Var ~ Sin, data=mydata, hidden=10, 
+                        startweights=winit, threshold=0.1)
+
+# Predict
+predictions <- predict(nn_inverse, mydata)
+
+# Plot results
+plot(mydata$Sin, mydata$Var, col="blue", cex=0.8,
+     xlab="sin(x)", ylab="x",
+     main="Predicting x from sin(x) - The Inverse Problem")
+points(mydata$Sin, predictions, col="red", cex=0.8)
+legend("topleft", c("True x", "Predicted x"),
+       col=c("blue", "red"), pch=1, cex=0.8)
+
+# Calculate error
+mse <- mean((mydata$Var - predictions)^2)
+cat("Mean Squared Error:", mse, "\n")
 
