@@ -32,6 +32,9 @@ ggplot(data, aes(x = df$PC1, y = df$PC2, color = ifelse(data$Death, "red", "blue
   theme_minimal()
 
 #TASK 2
+
+set.seed(12345)
+
 n <- nrow(data)
 id_train <- sample(1:n, floor(n * 0.50))
 tr <- data[id_train, ]
@@ -58,6 +61,7 @@ for(i in 1:length(observations_count)){
   
   knn_model <- kknn(Cholestrol ~ ., train = train, test = train, k = 10, kernel = "rectangular")
   knn_pred_tr <- knn_model$fitted.values
+  
   knn_pred <- predict(knn_model, newdata=ts)
   
   knn_model <- kknn(Cholestrol ~ ., train = train, test = ts, k = 10, kernel = "rectangular")
@@ -70,15 +74,61 @@ for(i in 1:length(observations_count)){
 }
 plot(tree_model_pruned)
 
-plot(observations_count, tree_res_tr, type='b', col='blue')
-points(observations_count, tree_res_ts, type='b', col='red')
+plot(observations_count, tree_res_tr, type='', col='blue', ylim= range(c(knn_res_tr, knn_res_ts)))
+points(observations_count, tree_res_ts, type='l', col='red')
 legend("topright",
        legend=c("Training error", "Testing error"),
        col=c("blue", "red"), lty=1, pch=19)
 
 
-plot(observations_count, knn_res_tr, type='b', col='blue')
-points(observations_count, knn_res_ts, type='b', col='red')
+y_lims <- range(c(knn_res_tr, knn_res_ts))
+
+plot(observations_count, knn_res_tr, type='l', col='blue', ylim = range(c(knn_res_tr, knn_res_ts)))
+points(observations_count, knn_res_ts, type='l', col='red')
 legend("topright",
        legend=c("Training error", "Testing error"),
        col=c("blue", "red"), lty=1, pch=19)
+
+
+
+#TASK 3 
+
+
+lin_model <- lm(Death ~ ., data=tr)
+
+print(summary(lin_model))
+
+pred_tr <- predict(lin_model, tr)
+pred_ts <- predict(lin_model, ts)
+
+loglikelihood <- function(theta, sigma, X, y){
+  n <- length(y)
+  y_pred <- X %*% theta
+  
+  sse <- sum((y - y_pred)^2)
+}
+set.seed(12345)
+
+library(glmnet)
+library(dplyr)
+
+tr <- data[id_train, ]
+ts <- data[-id_train, ]
+
+target_tr <- tr$Death
+target_ts <- ts$Death
+
+tr <- tr %>%select(-Death)
+cv_glm <- cv.glmnet(as.matrix(tr), as.matrix(target_tr), alpha = 0, family = "binomial")
+cv_glm #optimal lambda 0.0106
+pred_ts <- predict(cv_glm, newx=as.matrix(ts[-6]), a="lambda.min", type="response")
+# theorectical threshold FP/(FP+FN) = 1/11
+
+pred_ts1 <- ifelse(pred_ts > 1/11, 1,0)
+
+cm <- table(target_ts,pred_ts)
+
+miss <- mean(pred_ts == target_ts)
+
+
+
